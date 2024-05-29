@@ -1,0 +1,31 @@
+name: Update Rules
+
+on:
+  schedule:
+    # 每天的UTC时间凌晨1点运行
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+
+jobs:
+  update-rules:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout current repository
+      uses: actions/checkout@v3
+
+    - name: Download rules from easymosdns
+      run: |
+        git clone --depth 1 --branch rules https://github.com/pmkol/easymosdns temp_rules
+        rsync -av --delete temp_rules/ ./rules/
+        rm -rf temp_rules
+
+    - name: Commit and push changes
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git add .
+        git commit -m 'Update rules from easymosdns'
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
